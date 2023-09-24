@@ -4,6 +4,19 @@ use hashbrown::HashMap as BrownHashMap;
 use rand::prelude::*;
 use rustc_hash::FxHashMap as RustcHashMap;
 
+fn hash_map_insert_std(input: &Vec<u64>) {
+    let mut map_std = std::collections::HashMap::new();
+    for &item in input {
+        map_std.insert(item, item);
+    }
+}
+
+fn hash_map_get_std(input: &Vec<u64>, map: &std::collections::HashMap<u64, u64>) {
+    for &item in input {
+        black_box(map.get(&item));
+    }
+}
+
 fn hash_map_insert_brown(input: &Vec<u64>) {
     let mut map_brown: BrownHashMap<u64, u64> = BrownHashMap::default();
     for &item in input {
@@ -61,6 +74,11 @@ fn benchmark(c: &mut Criterion) {
         .copied()
         .zip(input.iter().copied())
         .collect::<FxHashMap<_, _>>();
+    let map_std = input
+        .iter()
+        .copied()
+        .zip(input.iter().copied())
+        .collect::<std::collections::HashMap<_, _>>();
 
     c.bench_function("hashbrown insert", |b| {
         b.iter(|| hash_map_insert_brown(&input))
@@ -78,6 +96,8 @@ fn benchmark(c: &mut Criterion) {
     c.bench_function("fxhash get", |b| {
         b.iter(|| hash_map_get_fx(&input, &map_fx))
     });
+    c.bench_function("std insert", |b| b.iter(|| hash_map_insert_std(&input)));
+    c.bench_function("std get", |b| b.iter(|| hash_map_get_std(&input, &map_std)));
 }
 
 criterion_group!(benches, benchmark);
